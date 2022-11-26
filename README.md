@@ -14,10 +14,6 @@ What things you need to install the software and how to install them
 * Joystick*1
 * SG90*1
 * Battery Box*1
-* 
-* 
-* 
-* 
 
 ```
 Give examples
