@@ -1,63 +1,76 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
+#include <esp_now.h>
+#include "WiFi.h"
+#include "function.h"
 
 
 
-//HC-06
+
+// 發送端
+// MAC Address -> B8:D6:1A:81:8E:5C
 
 
-SoftwareSerial BTSerial(10, 11); // RX | TX
-void setup()
-{
-  Serial.begin(9600);
-  Serial.println("Enter AT commands:");
-  BTSerial.begin(9600);  // HC-06 current bound rate (default 9600)
+Joystick J1;
+
+// Receive MAC address
+uint8_t broadcastAddress[] = {0x8C, 0xCE, 0x4E, 0xA6, 0xAF, 0xF8};
+
+//增加一個PEER到名單列
+esp_now_peer_info_t peerInfo;
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("\r\nLast Packet Send Status:\t");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
 }
-void loop()
-{
-  // Keep reading from HC-06 and send to Arduino Serial Monitor
-  if (BTSerial.available())
-    Serial.write(BTSerial.read());
+
+void setup() {
+  Serial.begin(9600); 
+  pinMode(VRx, INPUT);
+  pinMode(VRy, INPUT);
+  pinMode(SW, INPUT_PULLUP); 
+  WiFi.mode(WIFI_STA);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  //Get Status
+  esp_now_register_send_cb(OnDataSent);
+
+  // Register peer
+  memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
   
-  // Keep reading from Arduino Serial Monitor and send to HC-06
-  if (Serial.available())
-    BTSerial.write(Serial.read());
+  // Add peer        
+  if (esp_now_add_peer(&peerInfo) != ESP_OK){
+    Serial.println("Failed to add peer");
+    return;
+  }
+  
 }
 
 
-//JoyStick
-// int VRx = A0;
-// int VRy = A1;
-// int SW = 2;
+void loop() {
+  Serial.print("X: ");Serial.print(J1.joystickX());Serial.print(" | Y: ");Serial.print(J1.joystickY());Serial.print(" | Button: ");Serial.println(J1.joystickButton());
 
-// int xPosition = 0;
-// int yPosition = 0;
-// int SW_state = 0;
-// int mapX = 0;
-// int mapY = 0;
+  j.x = J1.joystickX();
+  j.y = J1.joystickY();
+  j.z = J1.joystickButton();
 
-// void setup() {
-//   Serial.begin(9600); 
+   esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &j, sizeof(j));
+   
+  // if (result == ESP_OK) {
+  //   Serial.println("Sent with success");
+  // }
+  // else {
+  //   Serial.println("Error sending the data");
+  // }
+  delay(10);
   
-//   pinMode(VRx, INPUT);
-//   pinMode(VRy, INPUT);
-//   pinMode(SW, INPUT_PULLUP); 
-  
-// }
+}
 
-// void loop() {
-//   xPosition = analogRead(VRx);
-//   yPosition = analogRead(VRy);
-//   SW_state = digitalRead(SW);
-//   mapX = map(xPosition, 0, 1023, -512, 512);
-//   mapY = map(yPosition, 0, 1023, -512, 512);
-//   Serial.print("X: ");
-//   Serial.print(mapX);
-//   Serial.print(" | Y: ");
-//   Serial.print(mapY);
-//   Serial.print(" | Button: ");
-//   Serial.println(SW_state);
 
-//   delay(100);
-  
-// }
+

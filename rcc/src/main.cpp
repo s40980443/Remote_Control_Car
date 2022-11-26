@@ -1,50 +1,77 @@
-#include <Arduino.h>
 #include <ESP32Servo.h>
-Servo servo;
+#include <Arduino.h>
+#include <esp_now.h>
+#include <WiFi.h>
+#include <function.h>
+
+
+
+// 接收端
+// MAC Address -> 8C:CE:4E:A6:AF:F8
+
+/*
+Servo        ESP32
+GND(棕)  ->   GND
+VCC(紅)  ->   5V  
+PWD(橘)  ->   P13
+*/
+
+Servo myservo;
+Motor m;
+
+
 int servoPin = 13;
 
-bool servoState = false;
-// 酷酷的車車
-void setup(){
-  servo.setPeriodHertz(50);    // standard 50 hz servo
-  servo.attach(servoPin);
-  servoState = servo.attached(); //是否連接到引腳 return true or false
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&j, incomingData, sizeof(j));
+  Serial.print("X = ");Serial.print(j.x); Serial.print(" | Y = "); Serial.print(j.y); Serial.print(" | Button = "); Serial.println(j.button);
+  myservo.write(j.y);
+  if (j.x >70 && j.x<100){
+    m.stop();
+  }else if(j.x<82){
+    m.forward();
+  }else if(j.x>86){
+    m.backwards();
+  }
+ 
+}
+
+
+
+ 
+void setup() {
+  Serial.begin(9600);
+  WiFi.mode(WIFI_STA);
+
+  myservo.setPeriodHertz(50); 
+  myservo.attach(servoPin);
+
+  pinMode(m.motor1Pin1, OUTPUT);
+  pinMode(m.motor1Pin2, OUTPUT);
+  pinMode(m.enable1Pin, OUTPUT);
+  ledcSetup(m.pwmChannel, m.freq, m.resolution);
+  ledcAttachPin(m.enable1Pin, m.pwmChannel);
+
+  // Init ESP-NOW
+  if (esp_now_init() != ESP_OK) {
+    Serial.println("Error initializing ESP-NOW");
+    return;
+  }
+
+  esp_now_register_recv_cb(OnDataRecv);
 }
 void loop(){
-  servo.read();
-  // servo.write(0);
+  // myservo.write(0);
   // delay(1000);
-  // servo.write(90);
+  // myservo.write(45);
   // delay(1000);
-  // servo.write(180);
+  // myservo.write(90);
   // delay(1000);
 }
 
-void _servoSetup(){
-
-}
-
-void left(){
-
-}
-void right(){
-
-}
 
 
-// Servo myservo;  // create servo object to control a servo
- 
-// // Recommended PWM GPIO pins on the ESP32 include 2,4,12-19,21-23,25-27,32-33 
-// int servoPin = 13;
- 
-// void setup() {
-//   myservo.setPeriodHertz(50); 
-//   myservo.attach(servoPin);
-// }
- 
-// void loop() {
-//   myservo.write(0); 
-//   delay(2000);
-//   myservo.write(180);
-//   delay(2000);
-// }
+
+
+
