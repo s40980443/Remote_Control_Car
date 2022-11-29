@@ -40,37 +40,10 @@ int Joystick::joystickX(){
 }
 int Joystick::joystickY(){
   yPosition = analogRead(VRy);
-  mapY = map(yPosition, 0, 4095, 0, 180);
+  mapY = map(yPosition, 0, 4095, 180, 0); //這個要自行調整
   return mapY;
 }
 int Joystick::joystickButton(){
   return digitalRead(SW);
 }
 
-
-// int xPosition = 0;
-// int yPosition = 0;
-// int SW_state = 0;
-// int mapX = 0;
-// int mapY = 0;
-
-// int joystickX(){
-//   xPosition = analogRead(VRx);
-//   mapX = map(xPosition, 0, 4095, 0, 180);
-//   // Serial.print("X = ");
-//   // Serial.println(xPosition);
-//   return mapX;
-// }
-
-// int joystickY(){
-//   yPosition = analogRead(VRy);
-//   mapY = map(yPosition, 0, 4095, 0, 180);
-//   // Serial.print("Y = ");
-//   // Serial.println(yPosition);
-//   return mapY;
-// }
-
-
-// int joystickButton(){
-//   return digitalRead(SW);
-// }
