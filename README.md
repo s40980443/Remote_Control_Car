@@ -29,8 +29,7 @@ PlatformIO v2.5.5
 
 ### Environment  
   
-MacOS Ventura 13.0.1  
-## Wiring Diagram
+MacOS Ventura 13.0.1 
 
 
 
